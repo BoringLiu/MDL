@@ -11,7 +11,7 @@ from sklearn.metrics import silhouette_score
 # pd.set_option('future.no_silent_downcasting', True)
 
 # 全局设置字体
-rcParams['font.family'] = 'SimHei'  # 或 'SimSun'，视系统而定
+rcParams['font.family'] = 'Arial Unicode MS'  # 或 'SimSun'，视系统而定
 rcParams['axes.unicode_minus'] = False  # 防止负号显示为方块
 
 data = pd.read_csv('DATA/mcdonalds.csv')
@@ -190,8 +190,9 @@ plt.show()
 ####################################################################
 # K_Means聚类分析
 
-kmeans = KMeans(n_clusters=3, random_state=42)
-kmeans.fit(data)
+# kmeans = KMeans(n_clusters=3, random_state=42)
+# kmeans.fit(data)
+
 kmeans_final = KMeans(n_clusters=4, random_state=15)
 kmeans_final.fit(data_scaled)
 # 获取聚类标签
@@ -222,6 +223,7 @@ print(feature_importance)
 
 #########################################################################################
 # 四类受访者之间的对比
+# 将分类变量的分布按聚类分组
 # 将分类变量的分布按聚类分组
 def plot_bar_chart(feature, title, xlabel, ylabel, position, data, fig):
     feature_and_cluster = pd.crosstab(data['Cluster'], data[feature])
@@ -262,12 +264,23 @@ plt.ylabel('喜好评分')
 plt.tight_layout()
 plt.show()
 
+
+
+
+
 #################################################################################################
 # 斯皮尔曼相关性分析
-def plot_spearmanr(data,features,title,wide,height):
-    # 计算斯皮尔曼相关性矩阵和p值矩阵
+def plot_spearmanr(data, features, title, wide, height):
+    # 计算斯皮尔曼相关性矩阵
     spearman_corr_matrix = data[features].corr(method='spearman')
-    pvals = data[features].corr(method=lambda x, y: spearmanr(x, y)[1]) - np.eye(len(data[features].columns))
+
+    # 手动计算 p 值矩阵
+    pvals = pd.DataFrame(np.zeros((len(features), len(features))), columns=features, index=features)
+    for i in range(len(features)):
+        for j in range(len(features)):
+            if i != j:
+                _, pval = spearmanr(data[features[i]], data[features[j]])
+                pvals.iloc[i, j] = pval
 
     # 转换 p 值为星号
     def convert_pvalue_to_asterisks(pvalue):
@@ -280,27 +293,25 @@ def plot_spearmanr(data,features,title,wide,height):
         return ""
 
     # 应用转换函数
-    pval_star = pvals.applymap(lambda x: convert_pvalue_to_asterisks(x))
+    pval_star = pvals.applymap(convert_pvalue_to_asterisks)
 
-    # 转换成 numpy 类型
-    corr_star_annot = pval_star.to_numpy()
-
-    # 定制 labels
+    # 合并相关性和星号注释
     corr_labels = spearman_corr_matrix.to_numpy()
-    p_labels = corr_star_annot
+    p_labels = pval_star.to_numpy()
     shape = corr_labels.shape
-
-    # 合并 labels
-    labels = (np.asarray(["{0:.2f}\n{1}".format(data, p) for data, p in zip(corr_labels.flatten(), p_labels.flatten())])).reshape(shape)
+    labels = np.asarray([
+        "{0:.2f}\n{1}".format(corr, star)
+        for corr, star in zip(corr_labels.flatten(), p_labels.flatten())
+    ]).reshape(shape)
 
     # 绘制热力图
-    fig, ax = plt.subplots(figsize=(height, wide), dpi=100, facecolor="w")
+    fig, ax = plt.subplots(figsize=(wide, height), dpi=100, facecolor="w")
     sns.heatmap(spearman_corr_matrix, annot=labels, fmt='', cmap='coolwarm',
-                vmin=-1, vmax=1, annot_kws={"size":10, "fontweight":"bold"},
-                linecolor="k", linewidths=.2, cbar_kws={"aspect":13}, ax=ax)
+                vmin=-1, vmax=1, annot_kws={"size": 10, "fontweight": "bold"},
+                linecolor="k", linewidths=.2, cbar_kws={"aspect": 13}, ax=ax)
 
     ax.tick_params(bottom=False, labelbottom=True, labeltop=False,
-                left=False, pad=1, labelsize=12)
+                   left=False, pad=1, labelsize=12)
     ax.yaxis.set_tick_params(labelrotation=0)
 
     # 自定义 colorbar 标签格式
@@ -314,5 +325,9 @@ def plot_spearmanr(data,features,title,wide,height):
     plt.title(title)
     plt.show()
 
-    features = data.drop(['Index', 'Cluster'], axis=1).columns.tolist()
-    plot_spearmanr(data, features, '各变量之间的斯皮尔曼相关系数热力图', 10, 13)
+
+# 示例调用
+# 假设 `data` 是你的 DataFrame
+# 请替换 'Index' 和 'Cluster' 为实际需要排除的列
+features = data.drop(['Index', 'Cluster'], axis=1).columns.tolist()
+plot_spearmanr(data, features, '各变量之间的斯皮尔曼相关系数热力图', wide=13, height=10)
