@@ -14,8 +14,8 @@ from sklearn.metrics import silhouette_score
 rcParams['font.family'] = 'Arial Unicode MS'  # 或 'SimSun'，视系统而定
 rcParams['axes.unicode_minus'] = False  # 防止负号显示为方块
 
-data = pd.read_csv('DATA/mcdonalds.csv')
-
+data = pd.read_csv('DATA/mcdonalds.csv')#*********************数据导入
+#######################################################################数据预览
 # 查看数据维度
 print(data.shape)
 
@@ -55,7 +55,7 @@ data['Like'] = data['Like'].map(like_mapping)
 
 ######################################################################
 
-# #描述性统计
+########################################################################描述性统计
 
 print(data.describe(include='all'))
 
@@ -141,7 +141,7 @@ for i, category in enumerate(yes_no_counts.index):
 plt.tight_layout()
 plt.show()
 
-################################################################################
+################################################################################用户画像
 
 # 将性别和访问频率编码为数值
 data['Gender'] = data['Gender'].map({'Female': 0, 'Male': 1})
