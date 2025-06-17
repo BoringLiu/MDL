@@ -234,6 +234,11 @@ def plot_bar_chart(feature, title, xlabel, ylabel, position, data, fig):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.xticks(rotation=0)
+
+    #横坐标去0
+    ax.set_xticks(range(len(feature_and_cluster_percent)))
+    ax.set_xticklabels([str(i + 1) for i in range(len(feature_and_cluster_percent))])
+
     # 添加数据标签
     for p in ax.patches:
         ax.annotate(f"{p.get_height():.1f}%", (p.get_x() + p.get_width() / 2., p.get_height()),
